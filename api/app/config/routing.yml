@@ -1,0 +1,3 @@
+bus_stop:
+    resource: "@BusStopBundle/Resources/config/routing.yml"
+    prefix:   /

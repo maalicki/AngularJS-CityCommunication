@@ -1,0 +1,52 @@
+<<<<<<< HEAD
+/api/web/bundles/
+/api/app/bootstrap.php.cache
+/api/app/cache/*
+/api/app/config/parameters.yml
+/api/app/logs/*
+!api/app/cache/.gitkeep
+!api/app/logs/.gitkeep
+/api/app/phpunit.xml
+/api/build/
+/api/vendor/
+/api/bin/
+=======
+# Cache and logs (Symfony2)
+/api/app/cache/*
+/api/app/logs/*
+!api/app/cache/.gitkeep
+!api/app/logs/.gitkeep
+
+# Cache and logs (Symfony3)
+/api/var/cache/*
+/api/var/logs/*
+!api/var/cache/.gitkeep
+!api/var/logs/.gitkeep
+
+# Parameters
+/api/app/config/parameters.yml
+/api/app/config/parameters.ini
+
+# Managed by Composer
+/api/app/bootstrap.php.cache
+/api/var/bootstrap.php.cache
+/api/bin/*
+!api/bin/console
+!api/bin/symfony_requirements
+/api/vendor/
+
+# Assets and user uploads
+/api/web/bundles/
+/api/web/uploads/
+
+# PHPUnit
+/api/app/phpunit.xml
+/api/phpunit.xml
+
+# Build data
+/api/build/
+
+# Composer PHAR
+>>>>>>> 7d5408b1bbca781d506913328fc9cab484bf1c2e
+/composer.phar
+/nbproject/private/
