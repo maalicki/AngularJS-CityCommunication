@@ -1,0 +1,11 @@
+<div class="row clearfix">
+    <div class="col-sm-offset-1 col-sm-11 column">
+        <div ng-repeat="(lineType, data) in lines">
+            <h5>{{lineType}}</h5>
+                <span ng-repeat="params in data" class="line">
+                    <a href="#" >{{params.lineNumber}}</a>
+                </span>
+            
+        </div>
+    </div>
+</div>
