@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 # Files for bower and angularjs
 /web/bower_components/
+/web/node_modules
 =======
 
 /api/web/bundles/
