@@ -1,0 +1,26 @@
+{
+  "version": "0.0.0",
+  "private": true,
+  "name": "CityCommunication",
+  "repository": "https://github.com/maalicki/AngularJS-CityCommunication",
+  "devDependencies": {
+    "grunt-contrib-less": "~1.0.1"
+  },
+  "scripts": {
+    "postinstall": "bower install  && grunt build",
+    "prestart": "npm install",
+    "pretest": "npm install",
+    "preupdate-webdriver": "npm install",
+    "update-webdriver": "webdriver-manager update",
+    "preprotractor": "npm run update-webdriver"
+  },
+  "dependencies": {
+    "bower": "^1.3.1",
+    "grunt": "^0.4.5",
+    "grunt-contrib-sass": "0.9.2",
+    "grunt-cli": "^0.1.13",
+    "grunt-contrib-cssmin": "^0.12.3",
+    "grunt-contrib-uglify": "^0.9.1",
+    "grunt-contrib-watch": "^0.6.1"
+  }
+}
