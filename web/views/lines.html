@@ -1,14 +1,13 @@
 <div class="row clearfix">
     <div class="col-sm-offset-1 col-sm-11 column">
-        <div class="loading" ng-show="loading">
-            <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-        </div>
-        <div ng-repeat="(lineType, data) in lines">
-            <h5>{{lineType}}</h5>
-                <span ng-repeat="params in data" class="line">
-                    <a href="#" >{{params.lineNumber}}</a>
-                </span>
-            
-        </div>
+        <div class="loading" ng-show="loading"></div>
+
+            <div class="row clearfix" ng-repeat="(lineType, data) in lines">
+                <div class="col-md-12 column">
+                    <h4 class="text-muted">{{lineType}}</h4>
+                    <span ng-repeat="params in data" class="line"><a href="#" >{{params.lineNumber}}</a></span>
+                </div>
+            </div>
+
     </div>
 </div>

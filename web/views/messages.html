@@ -1,0 +1,14 @@
+<div class="row clearfix">
+    <div class="col-sm-offset-1 col-sm-11 column">
+        <div class="loading" ng-show="loading"></div>
+
+            <div class="row clearfix" ng-repeat="(day, alerts) in messages">
+                <div class="col-md-12 column">
+                    <h4 class="text-muted">{{day}}</h4>
+                    <span ng-repeat="message in alerts" class="">{{message.short}}  <p><a class="btn" href="#">View details »</a></p>
+                        <small ng-show="0">{{message.long}}</small>
+                    </span>
+                </div>
+            </div>
+    </div>
+</div>
