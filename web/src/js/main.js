@@ -1,4 +1,4 @@
-     
+
 var busStopApp = angular.module('busStopApp', [
     'ngRoute',
     'linesServices'
@@ -35,26 +35,39 @@ busStopApp.controller('linesController', ['$scope', '$routeParams', '$http', 'ge
     function ($scope, $routeParams, $http, getLines) {
         $scope.loading = true;
         //$scope.lines = getLines.query({busStopId: $routeParams.busStopId});
-        $http.get('../api/web/getLineTypes')
-            .success(function( data, status, header, config) {
-                $scope.lines = data;
-                $scope.loading = false;
-            })
-            .error(function( data, status, header, config) {
-                console.log( status ); 
-            });
+        $http.get('../api/web/app.php/getLineTypes')
+                .success(function (data, status, header, config) {
+                    $scope.lines = data;
+                    $scope.loading = false;
+                })
+                .error(function (data, status, header, config) {
+                    console.log(status);
+                });
     }]);
 
 busStopApp.controller('messagesController', ['$scope', '$routeParams', '$http', 'getLines',
     function ($scope, $routeParams, $http, getLines) {
 
         $scope.loading = true;
+        $scope.queryLimit = 10;
+        $scope.dayLimit = '';
         
-        $http.post('../api/web/getMessage', {dayLimit:1, queryLimit: 2})
-            .success(function( data, status, header, config) {
-                $scope.messages = data;
-                $scope.loading = false;
-            });
+        $http({
+            method: "POST",
+            url: '../api/web/app_dev.php/getMessage',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: $.param({
+                dayLimit: $scope.dayLimit,
+                queryLimit: $scope.queryLimit
+            })
+        }).success(function (data, status, header, config) {
+            $scope.messages = data;
+            $scope.loading = false;
+        });
+        
+
     }]);
 
 
