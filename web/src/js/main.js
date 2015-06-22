@@ -49,23 +49,28 @@ busStopApp.controller('messagesController', ['$scope', '$routeParams', '$http', 
     function ($scope, $routeParams, $http, getLines) {
 
         $scope.loading = true;
-        $scope.queryLimit = 10;
         $scope.dayLimit = '';
         
-        $http({
-            method: "POST",
-            url: '../api/web/app_dev.php/getMessage',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            data: $.param({
-                dayLimit: $scope.dayLimit,
-                queryLimit: $scope.queryLimit
-            })
-        }).success(function (data, status, header, config) {
-            $scope.messages = data;
-            $scope.loading = false;
-        });
+        getMessages();
+        $scope.submit = function() {
+          getMessages();
+        };
+        
+        function getMessages() {
+            $http({
+                method: "POST",
+                url: '../api/web/app_dev.php/getMessage',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                data: $.param({
+                    dayLimit: $scope.dayLimit
+                })
+            }).success(function (data, status, header, config) {
+                $scope.messages = data;
+                $scope.loading = false;
+            });  
+        }
         
 
     }]);
