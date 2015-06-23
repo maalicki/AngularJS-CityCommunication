@@ -1,7 +1,9 @@
 
 var busStopApp = angular.module('busStopApp', [
     'ngRoute',
-    'linesServices'
+    'linesServices',
+    'ui.bootstrap',
+    'angucomplete-alt'
 ]);
 
 // configure our routes
@@ -27,9 +29,32 @@ busStopApp.config(['$routeProvider', function ($routeProvider) {
     }]);
 
 // create the controller and inject Angular's $scope
-busStopApp.controller('homeController', ['$scope', function ($scope) {
-        console.log("homeController");
-    }]);
+busStopApp.controller('homeController', ['$scope', '$http', function ($scope, $http) {
+    $('[data-toggle="tooltip"]').tooltip();
+
+    getLineTypes();
+
+    $scope.submit = function() {
+      console.log( $scope.lineTypes);
+    };
+
+
+    function getLineTypes() {
+        $http({
+            method: "POST",
+            url: '../api/web/getLineTypes',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: $.param({
+                type: 'name'
+            })
+        }).success(function (data, status, header, config) {
+            $scope.lineTypes = data;
+        });  
+    }
+        
+}]);
 
 busStopApp.controller('linesController', ['$scope', '$routeParams', '$http', 'getLines',
     function ($scope, $routeParams, $http, getLines) {

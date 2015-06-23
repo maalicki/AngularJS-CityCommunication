@@ -6,17 +6,47 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class DefaultController extends Controller
 {
+	public function getBusStopNameAction(Request $Request)
+	{
+		$string = $Request->query->get('s');
+		
+		$em = $this->getDoctrine()->getManager();
+
+		$repo  = $em->getRepository('BusStopBundle:BusStop');
+		$query = $repo->createQueryBuilder('a')
+	               ->where('a.name LIKE :name')
+	               ->setParameter('name', '%'.$string.'%')
+	               ->groupBy('a.name')
+	               ->getQuery();
+
+	    $list = array();
+	    foreach( $query->getResult() as $busStop ) {
+	    	$list['results'][ ] = array( 'name' => $busStop->getName() );
+	    }
+		return new JsonResponse($list);
+	}
 
     public function getLineTypesAction(Request $Request)
     {
 
         #if($Request->isXmlHttpRequest()) {
-        $em = $this->getDoctrine()->getManager();
-        $repository = $em->getRepository('BusStopBundle:Line');
+    	$type = $Request->request->get('type');
 
-        foreach ($repository->findAll() as $line) {
-            $lines[$line->getLinetype()->getName()][] = array('lineNumber' => $line->getId());
+        $em = $this->getDoctrine()->getManager();
+        
+
+        if( $type == 'name' ) {
+        	$repository = $em->getRepository('BusStopBundle:LineType');
+	        foreach ($repository->findAll() as $line) {
+	        	$lines[] = [ 'name' => $line->getName() ];
+	        }
+        } else {
+        	$repository = $em->getRepository('BusStopBundle:Line');
+	        foreach ($repository->findAll() as $line) {
+	        	$lines[$line->getLinetype()->getName()][] = array('lineNumber' => $line->getId());
+	        }
         }
+
 
         return new JsonResponse($lines);
     }
@@ -24,11 +54,14 @@ class DefaultController extends Controller
     public function getMessageAction(Request $Request)
     {
         
-        $dayLimit = ( $Request->request->get('dayLimit') ? $Request->request->get('dayLimit') : 7);
-        $queryLimit = ( $Request->request->get('queryLimit') ? $Request->request->get('queryLimit') : 5);
+        $dayLimit = $Request->request->get('dayLimit');
+        $today = new \DateTime();
 
-        $date = new \DateTime();
-        $date->modify("-$dayLimit day");
+        if( isset($dayLimit) ) {
+        	$date = new \DateTime($dayLimit);
+        } else {
+        	$date = $today;
+        }
 
         $msgRepo = $this->getDoctrine()
             ->getRepository('BusStopBundle:Message');
@@ -39,7 +72,8 @@ class DefaultController extends Controller
             ->setParameter('date', $date)
             ->getQuery();
 
-        $today = new \DateTime();
+        
+        $messages = array();
         foreach ($category->getResult() as $msg) {
             $msgDate = new \DateTime($msg['date']);
 

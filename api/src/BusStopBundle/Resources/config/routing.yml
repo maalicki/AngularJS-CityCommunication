@@ -5,3 +5,7 @@ bus_stop_lineNumbers:
 bus_stop_message:
     path:     /getMessage
     defaults: { _controller: BusStopBundle:Default:getMessage }
+
+bus_stop_busstopname:
+    path:     /getBusStopName
+    defaults: { _controller: BusStopBundle:Default:getBusStopName }
