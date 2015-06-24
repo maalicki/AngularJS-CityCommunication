@@ -1,98 +1,53 @@
 <div class="container-fluid">
-	<div class="row">
-		<div class="col-sm-4">
-			<form class="form-horizontal" role="form">
+    <div class="row">
+        <div class="col-sm-4">
+            <form class="form-horizontal" role="form">
 
-				<div class="form-group">
-					<div class="col-sm-10">
+                <div class="form-group">
+                    <div class="col-sm-10">
 
-						<div angucomplete-alt="" id="from"							placeholder="Pierwszy przystanek"
-							pause="500"												selected-object="selectedProject"
-							remote-url="../api/web/getBusStopName?s="				remote-url-request-formatter="remoteUrlRequestFn"
-							remote-url-data-field="results"							title-field="name"
-							description-field="description"							minlength="2"
-							input-class="form-control form-control-small"			match-class="highlight"
-							class="ng-isolate-scope">
+                        <input type="text" ng-model="busstop" 
+                               placeholder="Locations loaded via $http"
+                               typeahead-min-length="5"
+                               typeahead-wait-ms="700"
+                               typeahead="address for address in getLocation($viewValue)"
+                               typeahead-loading="loadingLocations" class="form-control">
+                        <i ng-show="loadingLocations" class="glyphicon glyphicon-refresh"></i>
+                        
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-10">
 
-							<div class="angucomplete-holder" ng-class="{'angucomplete-dropdown-visible': showDropdown}">
-
-								<input
-									ng-model="from"
-									id="from_value"
-									ng-class="{'angucomplete-input-not-empty': notEmpty}"
-									ng-model="searchStr"
-									ng-disabled="disableInput"
-									type="text"
-									maxlength="10"
-									ng-focus="onFocusHandler()"
-									class="form-control form-control-small ng-valid-maxlength ng-dirty ng-valid-parse ng-touched angucomplete-input-not-empty"
-									ng-blur="hideResults($event)"
-									autocapitalize="off"
-									autocorrect="off"
-									autocomplete="off"
-									ng-change="inputChangeHandler(searchStr)">
-
-								<div id="from_dropdown" class="angucomplete-dropdown ng-hide" ng-show="showDropdown">
-									<div class="angucomplete-searching ng-binding ng-hide" ng-show="searching" ng-bind="textSearching">Searching...</div>
-									<div class="angucomplete-searching ng-binding" ng-show="!searching &amp;&amp; (!results || results.length == 0)" ng-bind="textNoResults">No results found</div>   
-									<!-- ngRepeat: result in results -->  
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-10">
-
-						<div angucomplete-alt="" id="to"							placeholder="Ostatni przystanek"
-							pause="500"												selected-object="selectedProject"
-							remote-url="../api/web/getBusStopName?s="				remote-url-request-formatter="remoteUrlRequestFn"
-							remote-url-data-field="results"							title-field="name"
-							description-field="description"							minlength="2"
-							input-class="form-control form-control-small"			match-class="highlight"
-							class="ng-isolate-scope">
-
-							<div class="angucomplete-holder" ng-class="{'angucomplete-dropdown-visible': showDropdown}">
-
-								<input
-									ng-model="to"
-									id="to_value"
-									ng-class="{'angucomplete-input-not-empty': notEmpty}"
-									ng-model="searchStr"
-									ng-disabled="disableInput"
-									type="text"
-									maxlength="10"
-									ng-focus="onFocusHandler()"
-									class="form-control form-control-small ng-valid-maxlength ng-dirty ng-valid-parse ng-touched angucomplete-input-not-empty"
-									ng-blur="hideResults($event)"
-									autocapitalize="off"
-									autocorrect="off"
-									autocomplete="off"
-									ng-change="inputChangeHandler(searchStr)">
-
-								<div id="to_dropdown" class="angucomplete-dropdown ng-hide" ng-show="showDropdown">
-									<div class="angucomplete-searching ng-binding ng-hide" ng-show="searching" ng-bind="textSearching">Searching...</div>
-									<div class="angucomplete-searching ng-binding" ng-show="!searching &amp;&amp; (!results || results.length == 0)" ng-bind="textNoResults">No results found</div>   
-									<!-- ngRepeat: result in results -->  
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="form-group">
-					<div class="col-sm-10">
-						 
-						<button type="button" class="btn btn-default btn-block" ng-click="submit()">
-							Wyszukaj połączeń
-						</button>
-					</div>
-				</div>
-			</form>
+                        <button type="button" class="btn btn-default btn-block" ng-click="submit()">
+                            Wyszukaj połączeń
+                        </button>
+                    </div>
+                </div>
+            </form>
 
 
 
-		</div>
-		<div class="col-sm-8">
-		</div>
-	</div>
+        </div>
+        <div class="col-sm-8">
+            <div ng-repeat="(lineTypeName , data ) in lines">
+                <h4>{{lineTypeName}}</h4>
+                <div ng-repeat="(kierunek , days ) in data">
+                    <small>Kierunek: <b>{{kierunek}}</b></small>
+                    
+                    <div ng-repeat="(lineNumber, line) in days">
+                        <br/><i>Linia: {{lineNumber}}</i>
+                        
+                        <div ng-repeat="(lineNumber, info) in line">
+                            <small ng-show="info.msgShort"><div class="alert alert-info" role="alert">Komunikat: {{info.msgShort}}</div></small>
+                            
+                            <span  ng-repeat="time in info.timetable track by $index">{{ time | limitTo: 2 }}<sup>{{ time | limitTo : 2 : 3 }}</sup> </span>
+                        </div>
+                    </div>
+                    <hr>
+                </div>
+                <hr>
+            </div>
+        </div>
+    </div>
 </div>

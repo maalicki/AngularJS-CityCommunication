@@ -62,4 +62,44 @@ class LineType
     {
         return $this->name;
     }
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->line = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
+     * Add line
+     *
+     * @param \BusStopBundle\Entity\Line $line
+     * @return LineType
+     */
+    public function addLine(\BusStopBundle\Entity\Line $line)
+    {
+        $this->line[] = $line;
+
+        return $this;
+    }
+
+    /**
+     * Remove line
+     *
+     * @param \BusStopBundle\Entity\Line $line
+     */
+    public function removeLine(\BusStopBundle\Entity\Line $line)
+    {
+        $this->line->removeElement($line);
+    }
+
+    /**
+     * Get line
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getLine()
+    {
+        return $this->line;
+    }
 }

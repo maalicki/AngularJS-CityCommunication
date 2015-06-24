@@ -9,3 +9,7 @@ bus_stop_message:
 bus_stop_busstopname:
     path:     /getBusStopName
     defaults: { _controller: BusStopBundle:Default:getBusStopName }
+
+bus_stop_arrivals:
+    path:     /getTimeTable
+    defaults: { _controller: BusStopBundle:Default:getTimeTable }

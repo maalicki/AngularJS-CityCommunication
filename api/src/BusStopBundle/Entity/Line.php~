@@ -32,7 +32,7 @@ class Line
     
 
     /**
-     * @ORM\ManyToOne(targetEntity="LineType", inversedBy="line")
+     * @ORM\ManyToOne(targetEntity="LineType", inversedBy="line", cascade={"persist"})
      * @ORM\JoinColumn(name="linetype", referencedColumnName="id")
      *
      */

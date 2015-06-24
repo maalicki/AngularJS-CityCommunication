@@ -2,8 +2,7 @@
 var busStopApp = angular.module('busStopApp', [
     'ngRoute',
     'linesServices',
-    'ui.bootstrap',
-    'angucomplete-alt'
+    'ui.bootstrap'
 ]);
 
 // configure our routes
@@ -32,17 +31,39 @@ busStopApp.config(['$routeProvider', function ($routeProvider) {
 busStopApp.controller('homeController', ['$scope', '$http', function ($scope, $http) {
     $('[data-toggle="tooltip"]').tooltip();
 
-    getLineTypes();
-
     $scope.submit = function() {
-      console.log( $scope.lineTypes);
+        $http({
+            method: "POST",
+            url: '../api/web/app_dev.php/getTimeTable',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: $.param({
+                busstop: $scope.busstop
+            })
+        }).success(function (data, status, header, config) {
+            $scope.lines = data;
+        });  
     };
 
+
+    $scope.getLocation = function(val) {
+      return $http.get('../api/web/app.php/getBusStopName', {
+        params: {
+          str: val,
+          sensor: false
+        }
+      }).then(function(response){
+        return response.data.results.map(function(item){
+          return item.name;
+        });
+      });
+    };
 
     function getLineTypes() {
         $http({
             method: "POST",
-            url: '../api/web/getLineTypes',
+            url: '../api/web/app.php/getLineTypes',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
             },
@@ -84,7 +105,7 @@ busStopApp.controller('messagesController', ['$scope', '$routeParams', '$http', 
         function getMessages() {
             $http({
                 method: "POST",
-                url: '../api/web/app_dev.php/getMessage',
+                url: '../api/web/app.php/getMessage',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 },

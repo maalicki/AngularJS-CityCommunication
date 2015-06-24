@@ -21,6 +21,7 @@ class BusStopCommand extends ContainerAwareCommand
 
     private $dayTypes;
     private $lineTypes;
+    private $busStopName;
     private $cities;
 
     protected function configure()
@@ -47,14 +48,16 @@ class BusStopCommand extends ContainerAwareCommand
             $msg = "Parameter '$lines' is incorrect.\nUseage:\n-all to update all lines with one query "
                 . "(slow)\n1-100 for lines starting from 1 to 300\n20-34 for lines starting from 20 to 34, and so on...";
             throw new \Exception($msg);
-        } elseif( preg_match('/^[0-9]+-[0-9]+$/', $lines) ) {
-            list($start, $stop) = explode( '-', $lines);
+        } elseif (preg_match('/^[0-9]+-[0-9]+$/', $lines)) {
+            list($start, $stop) = explode('-', $lines);
         }
 
         $beginning = $this->timer();
-        
+
         echo PHP_EOL, 'Getting cities', PHP_EOL;
         $this->getCities();
+        echo PHP_EOL, 'Getting bus stop names', PHP_EOL;
+        $this->getBusStopName();
         echo PHP_EOL, 'Getting line types', PHP_EOL;
         $this->getLineType();
         echo PHP_EOL, 'Getting day types', PHP_EOL;
@@ -72,15 +75,15 @@ class BusStopCommand extends ContainerAwareCommand
         $crawler = $client->request('GET', $kzk_href . 'index.php?co=rozklady')
             #->filter('div#wszystkie_linie > div.zbior_linii > a');
             ->filter('div#wszystkie_linie ');
-        
-            $ar = [
-              'Tramwaje' => 1,
-              'Autobusy' => 2,
-              'Komunikacja nocna' => 3,
-              'Bezpłatne' => 4,
-              'Koleje Śląskie' => 5,
-            ];
-        
+
+        $ar = [
+            'Tramwaje' => 1,
+            'Autobusy' => 2,
+            'Komunikacja nocna' => 3,
+            'Bezpłatne' => 4,
+            'Koleje Śląskie' => 5,
+        ];
+
         foreach (range(0, $crawler->children()->count() - 1) as $num) {
             if (!empty(trim($crawler->children()->eq($num)->text()))) {
                 if ($crawler->children()->eq($num)->nodeName() == 'b') {
@@ -89,9 +92,9 @@ class BusStopCommand extends ContainerAwareCommand
                 }
                 if ($crawler->children()->eq($num)->attr('class') == 'zbior_linii') {
                     foreach (range(0, $crawler->children()->eq($num)->children()->count() - 1) as $lineNum) {
-                        
+
                         $line = new BusStops\Line;
-                        $line->setLinetype( $em->getReference('BusStopBundle\Entity\LineType', $ar[$lineType]) )
+                        $line->setLinetype($em->getReference('BusStopBundle\Entity\LineType', $ar[$lineType]))
                             #->setLinetype( $this->lineTypes[$lineType] )
                             ->setNumber($crawler->children()->eq($num)->children()->eq($lineNum)->children()->text())
                             ->setUrl($crawler->children()->eq($num)->children()->eq($lineNum)->attr('href'));
@@ -103,15 +106,15 @@ class BusStopCommand extends ContainerAwareCommand
         }
 
         echo PHP_EOL, 'Downloading line stops';
-        
-        
+
+
         $start = ( $start >= 0 ? $start : 0);
         $stop = ($stop > 0 ? $stop : count($lines));
-        $total = $stop-$start;
-        
+        $total = $stop - $start;
+
         $unavailableLines = array();
         #foreach ($lines as $number => $line) {
-        foreach ( range( $start, $stop ) as $number ) {
+        foreach (range($start, $stop) as $number) {
             $line = $lines[$number];
 
             echo PHP_EOL, 'Line ' . $line->getNumber() . ' (' . $number . '/ ' . $stop . ')', PHP_EOL;
@@ -143,7 +146,7 @@ class BusStopCommand extends ContainerAwareCommand
             echo PHP_EOL, 'Getting timetable - arrivals', PHP_EOL;
             foreach ($this->getDirections($crawler) as $directionName => $direction) {
                 foreach (range(1, ($direction->count()) - 1) as $num) {
-                    
+
                     $busStopLink = $direction->eq($num)->filter('td a')->attr('href');
                     preg_match("/nr_przyst=\d+/", $busStopLink, $preg_line);
                     list( $string, $busStopNumber ) = explode('=', $preg_line[0]);
@@ -152,14 +155,18 @@ class BusStopCommand extends ContainerAwareCommand
                     list( $string, $cityId ) = explode('_', $preg_city[0]);
 
                     $table = $this->getArrivals($kzk_href, $busStopLink);
-                    
+
                     $busStop = new BusStops\BusStop;
+
+                    $busStopName = $direction->eq($num)->filter('td a')->text();
+                    $this->getBusStopName($busStopName);
+
                     $busStop->setDirection($directionName)
                         ->addLine($line)
-                        ->setCity( $this->cities[$cityId])
+                        ->setCity($this->cities[$cityId])
                         #->setCity( $em->getReference('BusStopBundle\Entity\City', $cityId) )
                         ->setNumber($busStopNumber)
-                        ->setName($direction->eq($num)->filter('td a')->text());
+                        ->setBusstopid($this->busStopName[$busStopName]);
 
                     if ($table) {
                         $timeTable = new BusStops\Timetable();
@@ -176,32 +183,31 @@ class BusStopCommand extends ContainerAwareCommand
                     $busStop->setTimetable($timeTable);
                     $em->persist($busStop);
                 }
-                
+
                 $em->persist($line);
-                
-                if( $number > 0 && $number % 5 == 0 && ( in_array($directionName, array('r','c') ))) {
+
+                if ($number > 0 && $number % 5 == 0 && ( in_array($directionName, array('r', 'c')))) {
                     $em->flush();
                     #$em->clear();
-                    
+
                     /**
                      * as we clear all objects, we need to get this objects once again
                      */
                     #this->getCities();
                     $this->getDayType();
                     #$this->getLineType();
-                    
+
                     $seconds = 15;
-                    echo PHP_EOL , "Wait $seconds:  ";
-                    foreach( range( $seconds, 1) as $sec ) {
-                        echo $sec , ' ';
+                    echo PHP_EOL, "Wait $seconds:  ";
+                    foreach (range($seconds, 1) as $sec) {
+                        echo $sec, ' ';
                         sleep(1);
                     }
                 }
-                
-                echo PHP_EOL , '  # Script runtime:  '. gmdate("H:i:s" , round($this->timer()-$beginning) );
-                echo PHP_EOL , '  # ETA:  '. gmdate("H:i:s" ,  ($total*round($this->timer()-$beginning))/($number+1) ) ;
-                echo PHP_EOL , '  # ETA:  '. gmdate("H:i:s" , ($total-($number+1)) *  round($this->timer()-$beginning)/($number+1) );
-                    
+
+                echo PHP_EOL, '  # Script runtime:  ' . gmdate("H:i:s", round($this->timer() - $beginning));
+                echo PHP_EOL, '  # ETA:  ' . gmdate("H:i:s", ($total * round($this->timer() - $beginning)) / ($number + 1));
+                echo PHP_EOL, '  # ETA:  ' . gmdate("H:i:s", ($total - ($number + 1)) * round($this->timer() - $beginning) / ($number + 1));
             }
         }
         $em->flush();
@@ -262,17 +268,17 @@ class BusStopCommand extends ContainerAwareCommand
     {
         $em = $this->getContainer()->get('doctrine')->getEntityManager();
         $dm = $this->getContainer()->get('doctrine');
-        
+
         $dayTypeRepo = $dm->getRepository('BusStopBundle:DayType');
         $dbDayType = $dayTypeRepo->findAll();
-        
-        if($dbDayType) {
-            foreach( $dbDayType as $day ) {
-                $this->dayTypes[ $day->getType() ] = $day;
+
+        if ($dbDayType) {
+            foreach ($dbDayType as $day) {
+                $this->dayTypes[$day->getType()] = $day;
             }
         }
-        
-        if( $crawler && !isset($this->dayTypes[ $crawler->attr('class') ]) ) {
+
+        if ($crawler && !isset($this->dayTypes[$crawler->attr('class')])) {
             $dayTypeClass = $crawler->attr('class');
             $dayTypeName = $crawler->text();
 
@@ -290,27 +296,27 @@ class BusStopCommand extends ContainerAwareCommand
     {
         $em = $this->getContainer()->get('doctrine')->getEntityManager();
         $dm = $this->getContainer()->get('doctrine');
-        
+
         $lineTypeRepo = $dm->getRepository('BusStopBundle:LineType');
         $dbLineType = $lineTypeRepo->findAll();
-        
-        if($dbLineType) {
-            foreach( $dbLineType as $lineType ) {
-                $this->lineTypes[ $lineType->getName() ] = $lineType;
+
+        if ($dbLineType) {
+            foreach ($dbLineType as $lineType) {
+                $this->lineTypes[$lineType->getName()] = $lineType;
             }
         }
-        
+
         $client = new Client();
         $kzk_href = 'http://rozklady.kzkgop.pl/kzkgo/';
 
         $crawler = $client->request('GET', 'http://rozklady.kzkgop.pl/index.php?co=rozklady')
             ->filter('div#wszystkie_linie b');
-        
+
         foreach (range(0, $crawler->count() - 1) as $num) {
-            
+
             preg_match("/[A-Za-ż\s]+/", $crawler->eq($num)->text(), $line);
-            
-            if( !isset($this->lineTypes[ $line[0] ]) ) {
+
+            if (!isset($this->lineTypes[$line[0]])) {
                 $lineType = new BusStops\LineType();
                 $lineType->setName($line[0]);
 
@@ -319,7 +325,6 @@ class BusStopCommand extends ContainerAwareCommand
                 #$em->flush();
             }
         }
-        
     }
 
     protected function getArrivals($base, $url)
@@ -381,7 +386,7 @@ class BusStopCommand extends ContainerAwareCommand
                         $minute = substr($minutes->eq($min)->text(), 0, 2);
 
                         $time = new \DateTime($hour . ':' . $minute);
-                        
+
                         $arrival = new BusStops\Arrival();
                         $arrival->setDayType($this->dayTypes[$dayTypeClass])
                             ->setTime($time->format('H:i:00'));
@@ -403,23 +408,46 @@ class BusStopCommand extends ContainerAwareCommand
         return $arrives;
     }
 
-    private function getCities()
+    private function getBusStopName($name = false)
     {
-        
         $em = $this->getContainer()->get('doctrine')->getEntityManager();
         $dm = $this->getContainer()->get('doctrine');
-        
+        $busStopNameRepo = $dm->getRepository('BusStopBundle:BusStopName');
+        $dbBSName = $busStopNameRepo->findAll();
+
+        if ($dbBSName) {
+            foreach ($dbBSName as $bs) {
+                $this->busStopName[$bs->getName()] = $bs;
+            }
+        }
+
+        if ( $name && !isset($this->busStopName[$name])) {
+            $bsn = new BusStops\BusStopName();
+            $bsn->setName($name);
+            
+            $this->busStopName[$name] = $bsn;
+            $em->persist($bsn);
+            
+        }
+    }
+
+    private function getCities()
+    {
+
+        $em = $this->getContainer()->get('doctrine')->getEntityManager();
+        $dm = $this->getContainer()->get('doctrine');
+
         $cityRepo = $dm->getRepository('BusStopBundle:City');
         $dbCities = $cityRepo->findAll();
-        
-        if($dbCities) {
-            foreach( $dbCities as $city ) {
-                $this->cities[ $city->getCityid() ] = $city;
+
+        if ($dbCities) {
+            foreach ($dbCities as $city) {
+                $this->cities[$city->getCityid()] = $city;
             }
-            return; 
+            return;
         }
-        
-        
+
+
         $client = new Client();
         $crawler = $client->request('GET', 'http://rozklady.kzkgop.pl/index.php?co=rozklady&submenu=przystanki');
 
@@ -435,7 +463,6 @@ class BusStopCommand extends ContainerAwareCommand
             $em->persist($city);
             $em->flush();
         }
-
     }
 
     private function timer()

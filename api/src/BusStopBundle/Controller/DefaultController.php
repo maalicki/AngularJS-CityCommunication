@@ -6,45 +6,98 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class DefaultController extends Controller
 {
-	public function getBusStopNameAction(Request $Request)
-	{
-		$string = $Request->query->get('s');
-		
-		$em = $this->getDoctrine()->getManager();
 
-		$repo  = $em->getRepository('BusStopBundle:BusStop');
-		$query = $repo->createQueryBuilder('a')
-	               ->where('a.name LIKE :name')
-	               ->setParameter('name', '%'.$string.'%')
-	               ->groupBy('a.name')
-	               ->getQuery();
+    public function getTimeTableAction(Request $Request)
+    {
+        $string = $Request->request->get('busstop');
 
-	    $list = array();
-	    foreach( $query->getResult() as $busStop ) {
-	    	$list['results'][ ] = array( 'name' => $busStop->getName() );
-	    }
-		return new JsonResponse($list);
-	}
+        $em = $this->getDoctrine()->getManager();
+
+        $busStopNameRepo = $em->getRepository('BusStopBundle:BusStopName');
+        $lineRepo = $em->getRepository('BusStopBundle:Line');
+
+        $query = $busStopNameRepo->createQueryBuilder('a')
+            ->where("a.name = :name")
+            ->setParameter('name', $string)
+            ->getQuery();
+
+        $query = $query->getResult();
+        
+        $list = array();
+        foreach ( $query[0]->getBusStop() as $busStop) {
+            $arrival = array();
+            
+            foreach ($busStop->getLine() as $num) {
+                $query = $lineRepo->findOneById($num->getId());
+
+                if ($messages = $query->getMessages()->first()) {
+                    $msg = $messages->getMessageShort();
+                }
+
+                $timeTable = array();
+                $times = $busStop->getTimetable()->getArrival();
+                foreach ($times as $time) {
+                    $timeTable[ $time->getDaytype()->getName() ] = $time->getTime();
+                }
+
+                $arrival = array(
+                    'name' => $busStop->getBusstopid()->getName(),
+                    'number' => $query->getNumber(),
+                    'timetable' => $timeTable,
+                    'msgShort' => isset($msg) ? $msg : null,
+                    'from' => isset($from) ? $from : null,
+                    'timetable' => $timeTable,
+                );
+                
+                $lineType = $query->getLinetype()->getName();
+                $lineNumber = $query->getNumber();
+            }
+
+            #$query = $lineRepo->findOneById( $busStop->getLine() );
+
+            $list[$lineType][$busStop->getDirection()][$lineNumber][] = $arrival;
+        }
+        return new JsonResponse($list);
+    }
+
+    public function getBusStopNameAction(Request $Request)
+    {
+        $string = $Request->query->get('str');
+
+        $em = $this->getDoctrine()->getManager();
+
+        $repo = $em->getRepository('BusStopBundle:BusStopName');
+        $query = $repo->createQueryBuilder('a')
+            ->where('a.name LIKE :name')
+            ->setParameter('name', '%' . $string . '%')
+            ->getQuery();
+
+        $list = array();
+        foreach ($query->getResult() as $busStop) {
+            $list['results'][] = array('name' => $busStop->getName());
+        }
+        return new JsonResponse($list);
+    }
 
     public function getLineTypesAction(Request $Request)
     {
 
         #if($Request->isXmlHttpRequest()) {
-    	$type = $Request->request->get('type');
+        $type = $Request->request->get('type');
 
         $em = $this->getDoctrine()->getManager();
-        
 
-        if( $type == 'name' ) {
-        	$repository = $em->getRepository('BusStopBundle:LineType');
-	        foreach ($repository->findAll() as $line) {
-	        	$lines[] = [ 'name' => $line->getName() ];
-	        }
+
+        if ($type == 'name') {
+            $repository = $em->getRepository('BusStopBundle:LineType');
+            foreach ($repository->findAll() as $line) {
+                $lines[] = [ 'name' => $line->getName()];
+            }
         } else {
-        	$repository = $em->getRepository('BusStopBundle:Line');
-	        foreach ($repository->findAll() as $line) {
-	        	$lines[$line->getLinetype()->getName()][] = array('lineNumber' => $line->getId());
-	        }
+            $repository = $em->getRepository('BusStopBundle:Line');
+            foreach ($repository->findAll() as $line) {
+                $lines[$line->getLinetype()->getName()][] = array('lineNumber' => $line->getNumber());
+            }
         }
 
 
@@ -53,14 +106,14 @@ class DefaultController extends Controller
 
     public function getMessageAction(Request $Request)
     {
-        
+
         $dayLimit = $Request->request->get('dayLimit');
         $today = new \DateTime();
 
-        if( isset($dayLimit) ) {
-        	$date = new \DateTime($dayLimit);
+        if (isset($dayLimit)) {
+            $date = new \DateTime($dayLimit);
         } else {
-        	$date = $today;
+            $date = $today;
         }
 
         $msgRepo = $this->getDoctrine()
@@ -72,7 +125,7 @@ class DefaultController extends Controller
             ->setParameter('date', $date)
             ->getQuery();
 
-        
+
         $messages = array();
         foreach ($category->getResult() as $msg) {
             $msgDate = new \DateTime($msg['date']);
@@ -86,7 +139,7 @@ class DefaultController extends Controller
 
             $messages[$msg['date']][] = array(
                 'short' => $msg['message_short'],
-                'long'  => $msg['message_full'],
+                'long' => $msg['message_full'],
                 'class' => $class
             );
         }

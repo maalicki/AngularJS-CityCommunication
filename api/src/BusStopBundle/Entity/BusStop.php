@@ -42,9 +42,11 @@ class BusStop
     private $number;
     
     /**
-     * @ORM\Column(name="name", type="string", length=255, nullable=false)
+     * @ORM\ManyToOne(targetEntity="BusStopName", inversedBy="busstop", cascade={"persist"})
+     * @ORM\JoinColumn(name="busstop", referencedColumnName="id")
+     *
      */
-    private $name;
+    private $busstopid;
     
     /**
      * @ORM\ManyToOne(targetEntity="City", inversedBy="busstop", cascade={"persist"})
@@ -130,28 +132,6 @@ class BusStop
         return $this->number;
     }
 
-    /**
-     * Set name
-     *
-     * @param string $name
-     * @return BusStop
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    /**
-     * Get name
-     *
-     * @return string 
-     */
-    public function getName()
-    {
-        return $this->name;
-    }
 
     /**
      * Add line
@@ -230,5 +210,28 @@ class BusStop
     public function getTimetable()
     {
         return $this->timetable;
+    }
+
+    /**
+     * Set busstopid
+     *
+     * @param \BusStopBundle\Entity\BusStopName $busstopid
+     * @return BusStop
+     */
+    public function setBusstopid(\BusStopBundle\Entity\BusStopName $busstopid = null)
+    {
+        $this->busstopid = $busstopid;
+
+        return $this;
+    }
+
+    /**
+     * Get busstopid
+     *
+     * @return \BusStopBundle\Entity\BusStopName 
+     */
+    public function getBusstopid()
+    {
+        return $this->busstopid;
     }
 }
