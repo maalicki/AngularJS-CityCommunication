@@ -27,18 +27,28 @@ class Timetable
      */
     private $line;
 
+
+//    /**
+//     * @ORM\ManyToOne(targetEntity="Arrival", inversedBy="timetable")
+//     * @ORM\JoinColumn(name="arrivalid", referencedColumnName="id")
+//     * 
+//     * @var line
+//     */
     /**
      * @ORM\OneToMany(targetEntity="Arrival", mappedBy="timetable")
      * */
     private $arrival;
     
     /**
-     * @ORM\OneToMany(targetEntity="BusStop", mappedBy="timetable")
+     * @ORM\ManyToOne(targetEntity="BusStop", inversedBy="timetable")
+     * @ORM\JoinColumn(name="busstopid", referencedColumnName="id")
      * 
      * @var line
      */
     private $busstop;
     
+
+
     
     /**
      * Constructor
@@ -46,7 +56,6 @@ class Timetable
     public function __construct()
     {
         $this->arrival = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->busstop = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
@@ -116,32 +125,22 @@ class Timetable
     }
 
     /**
-     * Add busstop
+     * Set busstop
      *
      * @param \BusStopBundle\Entity\BusStop $busstop
      * @return Timetable
      */
-    public function addBusstop(\BusStopBundle\Entity\BusStop $busstop)
+    public function setBusstop(\BusStopBundle\Entity\BusStop $busstop = null)
     {
-        $this->busstop[] = $busstop;
+        $this->busstop = $busstop;
 
         return $this;
     }
 
     /**
-     * Remove busstop
-     *
-     * @param \BusStopBundle\Entity\BusStop $busstop
-     */
-    public function removeBusstop(\BusStopBundle\Entity\BusStop $busstop)
-    {
-        $this->busstop->removeElement($busstop);
-    }
-
-    /**
      * Get busstop
      *
-     * @return \Doctrine\Common\Collections\Collection 
+     * @return \BusStopBundle\Entity\BusStop 
      */
     public function getBusstop()
     {

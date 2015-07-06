@@ -6,7 +6,6 @@
  * @date May 28, 2015
  */
 namespace BusStopBundle\Command;
-
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -35,10 +34,10 @@ class BusStopCommand extends ContainerAwareCommand
             ->addOption(
                 'yell', null, InputOption::VALUE_NONE, 'If set, the task will yell in uppercase letters'
             )
-        ;
+         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+     protected function execute(InputInterface $input, OutputInterface $output) 
     {
         $lines = $input->getArgument('lines');
         $em = $this->getContainer()->get('doctrine')->getEntityManager();
@@ -78,7 +77,7 @@ class BusStopCommand extends ContainerAwareCommand
 
         $ar = [
             'Tramwaje' => 1,
-            'Autobusy' => 2,
+            'Autobusy' => 2, 
             'Komunikacja nocna' => 3,
             'Bezpłatne' => 4,
             'Koleje Śląskie' => 5,
@@ -115,10 +114,10 @@ class BusStopCommand extends ContainerAwareCommand
         $unavailableLines = array();
         #foreach ($lines as $number => $line) {
         foreach (range($start, $stop) as $number) {
-            $line = $lines[$number];
+             $line = $lines[$number];
 
             echo PHP_EOL, 'Line ' . $line->getNumber() . ' (' . $number . '/ ' . $stop . ')', PHP_EOL;
-
+  
             $crawlers = $client->request('GET', $kzk_href . $line->getUrl());
             $crawler = $this->isCurrentLine($crawlers);
 
@@ -167,20 +166,27 @@ class BusStopCommand extends ContainerAwareCommand
                         #->setCity( $em->getReference('BusStopBundle\Entity\City', $cityId) )
                         ->setNumber($busStopNumber)
                         ->setBusstopid($this->busStopName[$busStopName]);
-
-                    if ($table) {
+                    
+                            $busStop->setFrom( $table['from'] );
+                            $busStop->setTo( $table['to'] );
+                            
+                    if ( !empty( $table['timetable'] ) ) {
                         $timeTable = new BusStops\Timetable();
+                        
                         foreach ($table['timetable'] as $arrival) {
+                            
                             $timeTable->addArrival($arrival)
                                 ->setLine($line)
-                                ->addBusstop($busStop);
+                                ->setBusstop($busStop);
+                            
                             $arrival->setTimetable($timeTable);
+                            
                             $em->persist($arrival);
                         }
                         $em->persist($timeTable);
                     }
 
-                    $busStop->setTimetable($timeTable);
+                    $busStop->addTimetable($timeTable);
                     $em->persist($busStop);
                 }
 
@@ -195,7 +201,7 @@ class BusStopCommand extends ContainerAwareCommand
                      */
                     #this->getCities();
                     $this->getDayType();
-                    #$this->getLineType();
+                       #$this->getLineType();
 
                     $seconds = 15;
                     echo PHP_EOL, "Wait $seconds:  ";
@@ -233,9 +239,9 @@ class BusStopCommand extends ContainerAwareCommand
 
                 $kzk_href = 'http://rozklady.kzkgop.pl/kzkgo/';
 
-                echo 'Downloading new content';
+                echo 'Downloading new conte nt';
                 return $client->request('GET', $kzk_href . $url[0]);
-            }
+             }
         }
         return $crawler;
     }
@@ -275,7 +281,7 @@ class BusStopCommand extends ContainerAwareCommand
         if ($dbDayType) {
             foreach ($dbDayType as $day) {
                 $this->dayTypes[$day->getType()] = $day;
-            }
+            }  
         }
 
         if ($crawler && !isset($this->dayTypes[$crawler->attr('class')])) {
@@ -288,7 +294,7 @@ class BusStopCommand extends ContainerAwareCommand
 
             $this->dayTypes[$dayTypeClass] = $dayType;
             $em->persist($dayType);
-            #$em->flush();  
+              #$em->flush();  
         }
     }
 
@@ -318,14 +324,14 @@ class BusStopCommand extends ContainerAwareCommand
 
             if (!isset($this->lineTypes[$line[0]])) {
                 $lineType = new BusStops\LineType();
-                $lineType->setName($line[0]);
+                 $lineType->setName($line[0]);
 
                 $this->lineTypes[$line[0]] = $lineType;
                 $em->persist($lineType);
                 #$em->flush();
             }
         }
-    }
+    }  
 
     protected function getArrivals($base, $url)
     {
@@ -342,23 +348,26 @@ class BusStopCommand extends ContainerAwareCommand
 
         $arrivals = $crawler->filter('div#div_rozklad_tabliczka > table#tabliczka_przystankowo > tr');
 
-        /**
-         * if there is no arrivals, return empry array
-         */
-        if (!$arrivals->count()) {
-            return array();
-        }
+
 
         /**
          * get buss stop and direction
          */
         $arrives = array();
-        $arrives['from'] = $crawler->filter('div#tabliczka_topinfo h2')->text();
-        $arrives['to'] = $crawler->filter('div#tabliczka_topinfo h3')->text();
+         $arrives['from'] = ltrim( $crawler->filterXPath('//div[@id="tabliczka_topinfo"]/h2/a[1]')->text() , 'Przystanek: ');
+         $arrives['to'] =$crawler->filterXPath('//div[@id="tabliczka_topinfo"]')->children()->eq(2)->text();
+         $arrives['to'] =substr( $arrives['to'], strpos($arrives['to'], 'Kierunek: ')+10 );
 
+        /**
+         * if there is no arrivals, return empry array
+         */
+        if (!$arrivals->count()) {
+            return $arrives;
+        }
+        
         $date_str = $crawler->filter('div#div_rozklad_tabliczka > div.legenda > span#lenegnda_data')->text();
         preg_match("/[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2}/", $date_str, $preg_date);
-
+  
         /**
          * get last update
          */
@@ -376,16 +385,20 @@ class BusStopCommand extends ContainerAwareCommand
             } else {
                 #echo '  getting arrivals';
                 $span = $arrivals->eq($elem)->filter('span#blok_godzina');
-                foreach (range(1, $span->count()) as $num) {
-                    $hour = $span->filter('b')->text() < 10 ? '0' . $span->filter('b')->text() : $span->filter('b')->text();
+                
+                foreach (range(0, $span->count()-1) as $num) {
+                   $hour = $span->eq($num)->filter('b')->text() < 10 ? '0' . $span->eq($num)->filter('b')->text() : $span->eq($num)->filter('b')->text();
 
-                    $minutes = $span->children()->filter('a');
+                    $minutes = $span->eq($num)->children()->filter('a');
+                    
                     foreach (range(0, $minutes->count() - 1) as $min) {
+                        
                         #echo '.';
                         #$leged   = substr( $minutes->eq($min)->text(), 2 , 1);
-                        $minute = substr($minutes->eq($min)->text(), 0, 2);
-
-                        $time = new \DateTime($hour . ':' . $minute);
+                       $minute = substr($minutes->eq($min)->text(), 0, 2);
+                        
+                        
+                        $time = new \DateTime($hour . ':' . $minute . ':00');
 
                         $arrival = new BusStops\Arrival();
                         $arrival->setDayType($this->dayTypes[$dayTypeClass])
@@ -405,7 +418,7 @@ class BusStopCommand extends ContainerAwareCommand
          * http://rozklady.kzkgop.pl/kzkgo/index.php?co=rozklady&submenu=tabliczka&nr_linii=T3&nr_przyst=18&id_trasy=13725
          * http://rozklady.kzkgop.pl/kzkgo/index.php?co=rozklady&submenu=tabliczka&nr_linii=T0&nr_przyst=1&id_trasy=14136
          */
-        return $arrives;
+         return $arrives; 
     }
 
     private function getBusStopName($name = false)

@@ -7,7 +7,7 @@
                     <div class="col-sm-10">
 
                         <input type="text" ng-model="busstop" 
-                               placeholder="Locations loaded via $http"
+                               placeholder="Wpisz nazwę przystanku"
                                typeahead-min-length="5"
                                typeahead-wait-ms="700"
                                typeahead="address for address in getLocation($viewValue)"
@@ -33,16 +33,30 @@
             <div ng-repeat="(lineTypeName , data ) in lines">
                 <h4>{{lineTypeName}}</h4>
                 <div ng-repeat="(kierunek , days ) in data">
-                    <small>Kierunek: <b>{{kierunek}}</b></small>
+                    <small>Z: <b>{{days.data.from}}</b></small> | 
+                    <small>Kierunek: <b>{{days.data.to}}</b></small>
                     
                     <div ng-repeat="(lineNumber, line) in days">
                         <br/><i>Linia: {{lineNumber}}</i>
-                        
-                        <div ng-repeat="(lineNumber, info) in line">
-                            <small ng-show="info.msgShort"><div class="alert alert-info" role="alert">Komunikat: {{info.msgShort}}</div></small>
                             
-                            <span  ng-repeat="time in info.timetable track by $index">{{ time | limitTo: 2 }}<sup>{{ time | limitTo : 2 : 3 }}</sup> </span>
-                        </div>
+                            <small ng-show="line.msgShort"><div class="alert alert-info" role="alert">Komunikat: {{line.msgShort}}</div></small>
+                            
+                            <span  ng-repeat="(dayType, table) in line.timetable ">
+                                <div class="panel panel-default">
+                                  <div class="panel-heading">{{dayType}}</div>
+                                  <div class="panel-body">
+                                      <span  ng-repeat="time in table track by $index">
+                                        <div ng-if="$index < 5">
+                                          {{ time | limitTo: 2 }}<sup>{{ time | limitTo : 2 : 3 }}</sup> |
+                                        </div>
+                                          <section ng-if="$index > 4"  ng-init="more = 1" >
+                                            {{ time | limitTo: 2 }}<sup>{{ time | limitTo : 2 : 3 }}</sup> |
+                                        </section   >
+                                      </span>
+                                      
+                                  </div>
+                                </div>
+                            </span>
                     </div>
                     <hr>
                 </div>

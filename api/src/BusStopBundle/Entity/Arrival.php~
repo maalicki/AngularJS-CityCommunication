@@ -24,11 +24,13 @@ class Arrival
      */
     private $time;
     
+//    /**
+//     * @ORM\OneToMany(targetEntity="Timetable", mappedBy="arrival")
+//     * */
     /**
      * 
-     * @ORM\ManyToOne(targetEntity="Timetable", inversedBy="arrival", cascade={"persist"})
-     * @ORM\JoinColumn(name="timetable", referencedColumnName="id", onDelete="CASCADE")
-     * @var timetable
+     * @ORM\ManyToOne(targetEntity="Timetable", inversedBy="arrival")
+     * @var Line
      */
     private $timetable;
     
@@ -41,6 +43,7 @@ class Arrival
 
     
     
+
 
     /**
      * Get id
@@ -55,7 +58,7 @@ class Arrival
     /**
      * Set time
      *
-     * @param \DateTime $time
+     * @param string $time
      * @return Arrival
      */
     public function setTime($time)
@@ -68,7 +71,7 @@ class Arrival
     /**
      * Get time
      *
-     * @return \DateTime 
+     * @return string 
      */
     public function getTime()
     {

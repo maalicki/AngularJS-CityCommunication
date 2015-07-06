@@ -35,9 +35,15 @@ class DefaultController extends Controller
                 }
 
                 $timeTable = array();
-                $times = $busStop->getTimetable()->getArrival();
-                foreach ($times as $time) {
-                    $timeTable[ $time->getDaytype()->getName() ] = $time->getTime();
+                $now = new \DateTime;
+                foreach( $busStop->getTimetable() as $times ) {
+                    $cc_times = $times->getArrival();
+                
+                    foreach ($cc_times as $time) {
+                        if( $time->getTime() > $now->format('H:i:s') ) {
+                            $timeTable[ $time->getDayType()->getName() ][] = $time->getTime();
+                        }
+                    }
                 }
 
                 $arrival = array(
@@ -45,8 +51,12 @@ class DefaultController extends Controller
                     'number' => $query->getNumber(),
                     'timetable' => $timeTable,
                     'msgShort' => isset($msg) ? $msg : null,
-                    'from' => isset($from) ? $from : null,
                     'timetable' => $timeTable,
+                );
+                
+                $arrivalDetails = array(
+                    'from' => $busStop->getFrom(),
+                    'to' => $busStop->getTo(),
                 );
                 
                 $lineType = $query->getLinetype()->getName();
@@ -55,7 +65,8 @@ class DefaultController extends Controller
 
             #$query = $lineRepo->findOneById( $busStop->getLine() );
 
-            $list[$lineType][$busStop->getDirection()][$lineNumber][] = $arrival;
+            $list[$lineType][$busStop->getDirection()][$lineNumber] = $arrival;
+            $list[$lineType][$busStop->getDirection()]['data'] = $arrivalDetails;
         }
         return new JsonResponse($list);
     }
